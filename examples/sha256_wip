@@ -1,0 +1,56 @@
+/*
+	This is a WIP example implementing sha256, from FIPS 180-2. The spec
+	says all values as big-endian. This is left implicit in this example;
+	how to denote this is TBD.
+*/
+
+
+type HashVal = [8]u<32>
+
+type State = struct {
+	hashval: HashVal,
+}
+
+// Section 3.2
+fn rotr32(n: u<5>, x: u<32>) -> u<32> = (x >> n) | (x << (32 - n));
+fn rotl32(n: u<5>, x: u<32>) -> u<32> = (x << n) | (x >> (32 - n));
+
+// Section 4.1.2
+fn ch(x, y, z: u<32>) -> u<32>  = (x & y) ^ (x & z);
+fn maj(x, y, z: u<32>) -> u<32> = (x & y) ^ (x & z) ^ (y & z);
+fn SIGMA0(x: u<32>) -> u<32> = rotr32(2, x) ^ rotr32(13, x) ^ rotr32(22, x);
+fn SIGMA1(x: u<32>) -> u<32> = rotr32(6, x) ^ rotr32(11, x) ^ rotr32(25, x);
+fn sigma0(x: u<32>) -> u<32> = rotr32(7, x) ^ rotr32(18, x) ^ (x >> 3);
+fn sigma1(x: u<32>) -> u<32> = rotr32(17, x) ^ rotr32(19, x) ^ (x >> 10);
+
+// Section 5.3.2
+const InitialHashVal : HashVal = {
+	0x6a09e667,
+	0xbb67ae86,
+	0x3c6ef372,
+	0xa54ff53a,
+	0x510e527f,
+	0x9b05688c,
+	0x1f83d9ab,
+	0x5be0cd19,
+}
+
+
+// Section 6.2.2
+fn push_first_block(state: mut State, block [512/32]u<32>) = {
+	Wt := block
+	push_block(state, Wt, block)
+}
+
+fn push_block(state: mut State, block[512/32]u<32>) = {
+	a := state.hashval[0]
+	b := state.hashval[1]
+	c := state.hashval[2]
+	d := state.hashval[3]
+	e := state.hashval[4]
+	f := state.hashval[5]
+	g := state.hashval[6]
+	h := state.hashval[7]
+
+	// ...
+}
