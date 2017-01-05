@@ -11,7 +11,6 @@ type Block = [512/32]u<32>
 
 type State = struct {
 	hashval: HashVal,
-	W: [16]Block,
 }
 
 // Section 3.2
@@ -53,8 +52,10 @@ const InitialHashVal : HashVal = {
 
 // Section 6.2.2
 fn push_block(state: mut State, block: Block) = {
-	WifLt16 := block
-	//WifGt16 := sigma1(state.w[
+	W := block
+	for t := 16..63 {
+		W[t] = sigma1(W[t-2]) + W[t-7] + sigma0(W[t-15]) + W[t-16]
+	}
 
 	a := state.hashval[0]
 	b := state.hashval[1]
@@ -65,5 +66,25 @@ fn push_block(state: mut State, block: Block) = {
 	g := state.hashval[6]
 	h := state.hashval[7]
 
-	// ...
+	for t := 0..63 {
+		T1 := h + SIGMA1(e) + ch(e, f, g) + K[t] + W[t]
+		T2 := SIGMA0(a) + maj(a, b, c)
+		h = g
+		g = f
+		f = e
+		e = d + T1
+		d = c
+		c = b
+		b = a
+		a = T1 + T2
+	}
+
+	state.hashval[0] += a
+	state.hashval[1] += b
+	state.hashval[2] += c
+	state.hashval[3] += d
+	state.hashval[4] += e
+	state.hashval[5] += f
+	state.hashval[6] += g
+	state.hashval[7] += h
 }
