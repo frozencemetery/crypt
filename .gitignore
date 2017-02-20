@@ -1,3 +1,4 @@
+# Haskell stuff:
 dist
 dist-*
 cabal-dev
@@ -17,3 +18,5 @@ cabal.sandbox.config
 *.eventlog
 .stack-work/
 cabal.project.local
+# Vim swap files:
+*.swp
