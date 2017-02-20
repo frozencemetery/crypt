@@ -20,6 +20,8 @@ executable crypt
   main-is:             Main.hs
   -- other-modules:
   -- other-extensions:
-  build-depends:       base >=4.9 && <4.10
+  build-depends:
+    base >=4.9 && <4.10,
+    text >=1.2.2 && <1.3
   -- hs-source-dirs:
   default-language:    Haskell2010
