@@ -30,6 +30,12 @@ langDef = P.LanguageDef
         , ":=" -- not a binop, so not covered below.
         , ".."
         , ","
+        , "<"
+        , ">"
+        , "<="
+        , ">="
+        , "=="
+        , "!="
         ] ++
         binops ++
         (map (++"=") binops) -- +=, -= etc.
