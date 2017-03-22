@@ -1,5 +1,7 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Crypt.Parser where
 
+import qualified Data.Text as T
 import Control.Applicative ((<|>))
 import qualified Text.Parsec.Expr as P
 import qualified Text.Parsec.Token as P
@@ -48,9 +50,14 @@ langDef = P.LanguageDef
 
 lexer = P.makeTokenParser langDef
 
+braces = P.braces lexer
+brackets = P.brackets lexer
+identifier = T.pack <$> P.identifier lexer
 natural = P.natural lexer
 parens = P.parens lexer
+reserved = P.reserved lexer
 reservedOp = P.reservedOp lexer
+
 
 
 -- Parser proper
@@ -78,6 +85,15 @@ term = parens expr <|> (ExConst . ConstInt <$> natural)
     -- TODO: we should verify that 'natural' has the syntax we want for
     -- integers -- it accepts the haskell syntax.
 
+typ :: Parser Type
+typ = P.choice
+    [ TyArray <$> brackets expr <*> typ
+    , reserved "struct" >>
+        TyStruct <$> (braces $ field `P.sepEndBy` reservedOp ",")
+    , TyVar <$> P.try (identifier <* P.notFollowedBy (reservedOp "<"))
+    ]
+  where
+   field = (,) <$> identifier <*> (reservedOp ":" >> typ)
 
 -- Tests. Should pull these out into a proper test suite soonish.
 tests = and
@@ -95,6 +111,14 @@ tests = and
                     (ExConst (ConstInt 7))
                     (ExConst (ConstInt 4))))
             (ExConst (ConstInt 3))
+    , typ `parses` "[32]arr" $ TyArray (ExConst (ConstInt 32)) (TyVar "arr")
+    , typ `parses` "struct {}" $ TyStruct []
+    , typ `parses` "struct { foo: bar }" $ TyStruct [("foo", TyVar "bar")]
+    , typ `parses` "struct { foo: bar, baz: quux, }" $ TyStruct
+        [ ("foo", TyVar "bar")
+        , ("baz", TyVar "quux")
+        ]
+    , typ `parses` "myTyp" $ TyVar "myTyp"
     ]
   where
     parses p text result = P.runParser p () "" text == Right result

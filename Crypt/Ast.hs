@@ -22,7 +22,7 @@ data Type
     = TyVar Text
     | TyInt Int
     | TyWord Int
-    | TyArray Int Type
+    | TyArray Expr Type -- Expr must be a constant integral value.
     | TyStruct [(Text, Type)]
     | TyApp Type [Type]
     deriving(Show, Eq)
