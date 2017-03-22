@@ -22,6 +22,7 @@ executable crypt
   -- other-extensions:
   build-depends:
     base >=4.9 && <4.10,
-    text >=1.2.2 && <1.3
+    text >=1.2.2 && <1.3,
+    parsec >= 3.1.11 && < 3.2
   -- hs-source-dirs:
   default-language:    Haskell2010
