@@ -1,7 +1,6 @@
 module Crypt.Parser where
 
-import Control.Applicative ((<*), (<|>))
-import Control.Monad (void)
+import Control.Applicative ((<|>))
 import qualified Text.Parsec.Expr as P
 import qualified Text.Parsec.Token as P
 import qualified Text.ParserCombinators.Parsec as P
