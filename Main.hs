@@ -1,4 +1,9 @@
 module Main where
 
+import Crypt.Parser (file)
+import Text.Parsec (runParser)
+
 main :: IO ()
-main = print "Hello, Crypt!"
+main = do
+    contents <- getContents
+    print (runParser file () "<stdin>" contents)

@@ -64,6 +64,7 @@ parens = P.parens lexer
 reserved = P.reserved lexer
 reservedOp = P.reservedOp lexer
 semi = P.semi lexer
+whiteSpace = P.whiteSpace lexer
 
 
 
@@ -114,13 +115,19 @@ expr :: Parser Expr
 expr = P.buildExpressionParser opTable term
 
 term :: Parser Expr
-term = P.choice
-    [ parens expr
-    , ExConst . ConstInt <$> natural
-    -- TODO: we should verify that 'natural' has the syntax we want for
-    -- integers -- it accepts the haskell syntax.
-    , ExVar <$> identifier
-    ]
+term = do
+    first <- P.choice
+                [ parens expr
+                , ExConst . ConstInt <$> natural
+                -- TODO: we should verify that 'natural' has the
+                -- syntax we want for integers -- it accepts the
+                -- haskell syntax.
+                , ExVar <$> identifier
+                ]
+    args <- P.optionMaybe $ parens (expr `P.sepBy` comma)
+    return $ case args of
+        Nothing -> first
+        Just args' -> ExApply first args'
 
 typ :: Parser Type
 typ = P.choice
@@ -129,13 +136,17 @@ typ = P.choice
         TyStruct <$> (braces $ field `P.sepEndBy` comma)
     , do
         varName <- TyVar <$> identifier
-        args <- P.try $ P.optionMaybe $ angles $ typ `P.sepEndBy` comma
+        args <- P.try $ P.optionMaybe $ angles $ typArg `P.sepEndBy` comma
         return $ case args of
             Just args' -> TyApp varName args'
             Nothing -> varName
     ]
   where
    field = (,) <$> identifier <*> (colon >> typ)
+   typArg = P.choice
+        [ TyArgNum <$> natural
+        , TyArgType <$> typ
+        ]
 
 lval :: P.Parser LVal
 lval = do
@@ -148,6 +159,11 @@ lval = do
                 Nothing -> LVar varName
                 Just arg -> LIndex tFn arg
         _ -> LIndex tFn <$> brackets expr
+
+
+file = whiteSpace >> P.many definition <* P.eof
+
+definition = P.choice [typeDef, fnDef, constDef]
 
 typeDef :: P.Parser (T.Text, Def)
 typeDef = do

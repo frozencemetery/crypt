@@ -20,11 +20,14 @@ data ArgSpec = ArgSpec
 
 data Type
     = TyVar Text
-    | TyInt Int
-    | TyWord Int
     | TyArray Expr Type -- Expr must be a constant integral value.
     | TyStruct [(Text, Type)]
-    | TyApp Type [Type]
+    | TyApp Type [TypeArg]
+    deriving(Show, Eq)
+
+data TypeArg
+    = TyArgNum Integer
+    | TyArgType Type
     deriving(Show, Eq)
 
 data Fn = Fn

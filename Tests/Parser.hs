@@ -30,6 +30,16 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         ExBinary Equals
             (ExBinary BitAnd (ExConst (ConstInt 1)) (ExConst (ConstInt 2)))
             (ExConst (ConstInt 3))
+    , expr `parses` "f(x, y, z)" $
+        ExApply (ExVar "f") [ExVar "x", ExVar "y", ExVar "z"]
+    , expr `parses` "f()" $ ExApply (ExVar "f") []
+    , expr `parses` "(2 + 1)(2, 3)" $ ExApply
+        (ExBinary Add
+            (ExConst (ConstInt 2))
+            (ExConst (ConstInt 1)))
+        [ ExConst (ConstInt 2)
+        , ExConst (ConstInt 3)
+        ]
     , typ `parses` "[32]arr" $ TyArray (ExConst (ConstInt 32)) (TyVar "arr")
     , typ `parses` "struct {}" $ TyStruct []
     , typ `parses` "struct { foo: bar }" $ TyStruct [("foo", TyVar "bar")]
@@ -39,7 +49,8 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         ]
     , typ `parses` "myTyp" $ TyVar "myTyp"
     , typ `parses` "Foo<bar, baz>" $
-        TyApp (TyVar "Foo") [TyVar "bar", TyVar "baz"]
+        TyApp (TyVar "Foo") [TyArgType $ TyVar "bar", TyArgType $ TyVar "baz"]
+    , typ `parses` "u<32>" $ TyApp (TyVar "u") [TyArgNum 32]
     , lval `parses` "foo" $ LVar "foo"
     , lval `parses` "hello[3 + 2]" $
          LIndex
@@ -80,11 +91,11 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , constDef `parses` "const Foo: Bar<T> = 32" $
         ( "Foo"
         , DefConst
-            (TyApp (TyVar "Bar") [TyVar "T"])
+            (TyApp (TyVar "Bar") [TyArgType $ TyVar "T"])
             (ExConst (ConstInt 32))
         )
     , typeDef `parses` "type Foo = Bar<T>" $
-        ("Foo", DefType $ TyApp (TyVar "Bar") [TyVar "T"])
+        ("Foo", DefType $ TyApp (TyVar "Bar") [TyArgType $ TyVar "T"])
     , typeDef `parses` "type Foo = struct { x: Bar, y: Baz }" $
         ("Foo", DefType $ TyStruct
             [ ("x", TyVar "Bar")
@@ -113,11 +124,13 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , fnDef `parses` "fn f(x, y : Bar<T>, baz: mut Quux) = 1;" $
         ("f", DefFn $ Fn { fnArgs = [ ArgSpec { argMut = False
                                               , argName = "x"
-                                              , argType = TyApp (TyVar "Bar") [TyVar "T"]
+                                              , argType = TyApp (TyVar "Bar")
+                                                                [TyArgType $ TyVar "T"]
                                               }
                                     , ArgSpec { argMut = False
                                               , argName = "y"
-                                              , argType = TyApp (TyVar "Bar") [TyVar "T"]
+                                              , argType = TyApp (TyVar "Bar")
+                                                                [TyArgType $ TyVar "T"]
                                               }
                                     , ArgSpec { argMut = True
                                               , argName = "baz"
@@ -127,6 +140,7 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
                          , fnReturn = Nothing
                          , fnBody = StmtExpr (ExConst (ConstInt 1))
                          })
+    , file `parses` "/* this is a file with a comment at the top */\n" $ []
     ]
   where
     parses p text result = TestCase $
