@@ -50,8 +50,10 @@ langDef = P.LanguageDef
 
 lexer = P.makeTokenParser langDef
 
+angles = P.angles lexer
 braces = P.braces lexer
 brackets = P.brackets lexer
+comma = P.comma lexer
 identifier = T.pack <$> P.identifier lexer
 natural = P.natural lexer
 parens = P.parens lexer
@@ -90,7 +92,12 @@ typ = P.choice
     [ TyArray <$> brackets expr <*> typ
     , reserved "struct" >>
         TyStruct <$> (braces $ field `P.sepEndBy` reservedOp ",")
-    , TyVar <$> P.try (identifier <* P.notFollowedBy (reservedOp "<"))
+    , do
+        varName <- TyVar <$> identifier
+        args <- P.try $ P.optionMaybe $ angles $ typ `P.sepEndBy` comma
+        return $ case args of
+            Just args' -> TyApp varName args'
+            Nothing -> varName
     ]
   where
    field = (,) <$> identifier <*> (reservedOp ":" >> typ)

@@ -34,6 +34,8 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         , ("baz", TyVar "quux")
         ]
     , typ `parses` "myTyp" $ TyVar "myTyp"
+    , typ `parses` "Foo<bar, baz>" $
+        TyApp (TyVar "Foo") [TyVar "bar", TyVar "baz"]
     ]
   where
     parses p text result = TestCase $
