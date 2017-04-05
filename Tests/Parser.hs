@@ -77,6 +77,19 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         StmtAssign
             (LIndex (ExVar "x") (ExConst (ConstInt 7)))
             (ExConst (ConstInt 23))
+    , constDef `parses` "const Foo: Bar<T> = 32" $
+        ( "Foo"
+        , DefConst
+            (TyApp (TyVar "Bar") [TyVar "T"])
+            (ExConst (ConstInt 32))
+        )
+    , typeDef `parses` "type Foo = Bar<T>" $
+        ("Foo", DefType $ TyApp (TyVar "Bar") [TyVar "T"])
+    , typeDef `parses` "type Foo = struct { x: Bar, y: Baz }" $
+        ("Foo", DefType $ TyStruct
+            [ ("x", TyVar "Bar")
+            , ("y", TyVar "Baz")
+            ])
     ]
   where
     parses p text result = TestCase $

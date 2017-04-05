@@ -23,6 +23,7 @@ langDef = P.LanguageDef
     , P.opLetter = opChar
     , P.reservedNames =
         [ "fn"
+        , "const"
         , "struct"
         , "type"
         ]
@@ -54,6 +55,7 @@ lexer = P.makeTokenParser langDef
 angles = P.angles lexer
 braces = P.braces lexer
 brackets = P.brackets lexer
+colon = P.colon lexer
 comma = P.comma lexer
 identifier = T.pack <$> P.identifier lexer
 natural = P.natural lexer
@@ -132,7 +134,7 @@ typ = P.choice
             Nothing -> varName
     ]
   where
-   field = (,) <$> identifier <*> (reservedOp ":" >> typ)
+   field = (,) <$> identifier <*> (colon >> typ)
 
 lval :: P.Parser LVal
 lval = do
@@ -145,3 +147,28 @@ lval = do
                 Nothing -> LVar varName
                 Just arg -> LIndex tFn arg
         _ -> LIndex tFn <$> brackets expr
+
+typeDef :: P.Parser (T.Text, Def)
+typeDef = do
+    reserved "type"
+    name <- identifier
+    reservedOp "="
+    ty <- typ
+    return (name, DefType ty)
+
+fnDef :: P.Parser (T.Text, Def)
+fnDef = do
+    reserved "fn"
+    name <- identifier
+    -- args <- parens
+    undefined
+
+constDef :: P.Parser (T.Text, Def)
+constDef = do
+    reserved "const"
+    name <- identifier
+    colon
+    ty <- typ
+    reservedOp "="
+    value <- expr
+    return (name, DefConst ty value)
