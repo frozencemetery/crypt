@@ -94,34 +94,3 @@ typ = P.choice
     ]
   where
    field = (,) <$> identifier <*> (reservedOp ":" >> typ)
-
--- Tests. Should pull these out into a proper test suite soonish.
-tests = and
-    [ expr `parses` "4+1" $
-        ExBinary Add (ExConst (ConstInt 4)) (ExConst (ConstInt 1))
-    , expr `parses` "2 * 7 - 4 / 3" $
-        ExBinary Sub
-            (ExBinary Mul (ExConst (ConstInt 2)) (ExConst (ConstInt 7)))
-            (ExBinary Div (ExConst (ConstInt 4)) (ExConst (ConstInt 3)))
-    , expr `parses` "2 * (7 - 4) / 3" $
-        ExBinary Div
-            (ExBinary Mul
-                (ExConst (ConstInt 2))
-                (ExBinary Sub
-                    (ExConst (ConstInt 7))
-                    (ExConst (ConstInt 4))))
-            (ExConst (ConstInt 3))
-    , typ `parses` "[32]arr" $ TyArray (ExConst (ConstInt 32)) (TyVar "arr")
-    , typ `parses` "struct {}" $ TyStruct []
-    , typ `parses` "struct { foo: bar }" $ TyStruct [("foo", TyVar "bar")]
-    , typ `parses` "struct { foo: bar, baz: quux, }" $ TyStruct
-        [ ("foo", TyVar "bar")
-        , ("baz", TyVar "quux")
-        ]
-    , typ `parses` "myTyp" $ TyVar "myTyp"
-    ]
-  where
-    parses p text result = P.runParser p () "" text == Right result
-    fails p text = case P.runParser p () "" text of
-        Right _ -> False
-        Left _ -> True
