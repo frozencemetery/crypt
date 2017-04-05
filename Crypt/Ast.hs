@@ -62,6 +62,14 @@ data BinOp
     | Mul
     | Div
     | Mod
+    | Equals
+    | NotEquals
+    | Less
+    | Greater
+    | LtEq
+    | GtEq
+    | And
+    | Or
     | BitAnd
     | BitOr
     | BitXor

@@ -68,10 +68,24 @@ opTable =
     [ [ left "*" Mul
       , left "/" Div
       , left "%" Div
+      , left "<<" ShiftL
+      , left ">>" ShiftR
+      , left "&" BitAnd
       ]
     , [ left "+" Add
       , left "-" Sub
+      , left "|" BitOr
+      , left "^" BitXor
       ]
+    , [ left "<" Less
+      , left ">" Greater
+      , left "<=" LtEq
+      , left ">=" GtEq
+      , left "==" Equals
+      , left "!=" NotEquals
+      ]
+    , [ left "&&" And ]
+    , [ left "||" Or ]
     ]
   where
     left txt ast = binary txt ast P.AssocLeft
