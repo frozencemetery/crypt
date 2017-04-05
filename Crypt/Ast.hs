@@ -29,7 +29,7 @@ data Type
 
 data Fn = Fn
     { fnArgs   :: [ArgSpec]
-    , fnReturn :: Type
+    , fnReturn :: Maybe Type
     , fnBody   :: Stmt
     } deriving(Show, Eq)
 

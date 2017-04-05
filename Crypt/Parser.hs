@@ -26,6 +26,7 @@ langDef = P.LanguageDef
         , "const"
         , "struct"
         , "type"
+        , "mut"
         ]
     , P.reservedOpNames =
         [ ":"
@@ -160,8 +161,27 @@ fnDef :: P.Parser (T.Text, Def)
 fnDef = do
     reserved "fn"
     name <- identifier
-    -- args <- parens
-    undefined
+    args <- parens (argSpecs `P.sepBy` comma)
+    returnType <- P.optionMaybe $ do
+        reservedOp "->"
+        typ
+    reservedOp "="
+    body <- stmt
+    return (name, DefFn $ Fn { fnArgs = concat args
+                             , fnReturn = returnType
+                             , fnBody = body
+                             })
+  where
+    argSpecs = do
+        argNames <- identifier `P.sepBy` comma
+        colon
+        mut <- (/=Nothing) <$> P.optionMaybe (reserved "mut")
+        ty <- typ
+        return $ map (\name -> ArgSpec { argMut = mut
+                                       , argName = name
+                                       , argType = ty
+                                       })
+                     argNames
 
 constDef :: P.Parser (T.Text, Def)
 constDef = do

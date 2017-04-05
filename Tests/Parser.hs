@@ -90,6 +90,43 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
             [ ("x", TyVar "Bar")
             , ("y", TyVar "Baz")
             ])
+    , fnDef `parses` "fn x() -> int = 4;" $
+        ("x", DefFn $ Fn { fnArgs = []
+                         , fnReturn = Just (TyVar "int")
+                         , fnBody = StmtExpr (ExConst (ConstInt 4))
+                         })
+    , fnDef `parses` "fn x(y, z : int) = { 2; 7; }" $
+        ("x", DefFn $ Fn { fnArgs = [ ArgSpec { argMut = False
+                                              , argName = "y"
+                                              , argType = TyVar "int"
+                                              }
+                                    , ArgSpec { argMut = False
+                                              , argName = "z"
+                                              , argType = TyVar "int"
+                                              }
+                                    ]
+                         , fnReturn = Nothing
+                         , fnBody = StmtBlock [ StmtExpr (ExConst (ConstInt 2))
+                                              , StmtExpr (ExConst (ConstInt 7))
+                                              ]
+                         })
+    , fnDef `parses` "fn f(x, y : Bar<T>, baz: mut Quux) = 1;" $
+        ("f", DefFn $ Fn { fnArgs = [ ArgSpec { argMut = False
+                                              , argName = "x"
+                                              , argType = TyApp (TyVar "Bar") [TyVar "T"]
+                                              }
+                                    , ArgSpec { argMut = False
+                                              , argName = "y"
+                                              , argType = TyApp (TyVar "Bar") [TyVar "T"]
+                                              }
+                                    , ArgSpec { argMut = True
+                                              , argName = "baz"
+                                              , argType = TyVar "Quux"
+                                              }
+                                    ]
+                         , fnReturn = Nothing
+                         , fnBody = StmtExpr (ExConst (ConstInt 1))
+                         })
     ]
   where
     parses p text result = TestCase $
