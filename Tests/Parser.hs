@@ -88,6 +88,9 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         StmtAssign
             (LIndex (ExVar "x") (ExConst (ConstInt 7)))
             (ExConst (ConstInt 23))
+    , stmt `parses` "for x := 0..32 { }" $
+        StmtFor (LVar "x") (ExConst (ConstInt 0)) (ExConst (ConstInt 32))
+            (StmtBlock [])
     , constDef `parses` "const Foo: Bar<T> = 32" $
         ( "Foo"
         , DefConst

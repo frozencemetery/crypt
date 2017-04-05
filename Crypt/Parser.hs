@@ -27,6 +27,7 @@ langDef = P.LanguageDef
         , "struct"
         , "type"
         , "mut"
+        , "for"
         ]
     , P.reservedOpNames =
         [ ":"
@@ -108,6 +109,15 @@ stmt = P.choice
             , reservedOp ":=" >> StmtAssignDecl l <$> expr
             ] <* semi
     , StmtExpr <$> expr <* semi
+    , do
+        reserved "for"
+        l <- lval
+        reservedOp ":="
+        lo <- term
+        reservedOp ".."
+        hi <- term
+        body <- stmt
+        return (StmtFor l lo hi body)
     ]
 
 
@@ -118,13 +128,14 @@ term :: Parser Expr
 term = do
     first <- P.choice
                 [ parens expr
+                , ExArray <$> brackets (expr `P.sepEndBy` comma)
                 , ExConst . ConstInt <$> natural
                 -- TODO: we should verify that 'natural' has the
                 -- syntax we want for integers -- it accepts the
                 -- haskell syntax.
                 , ExVar <$> identifier
                 ]
-    args <- P.optionMaybe $ parens (expr `P.sepBy` comma)
+    args <- P.optionMaybe $ parens (expr `P.sepEndBy` comma)
     return $ case args of
         Nothing -> first
         Just args' -> ExApply first args'

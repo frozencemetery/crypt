@@ -42,6 +42,7 @@ data Stmt
     | StmtBlock [Stmt]
     | StmtAssign LVal Expr
     | StmtAssignDecl LVal Expr
+    | StmtFor LVal Expr Expr Stmt
     deriving(Show, Eq)
 
 data Expr
