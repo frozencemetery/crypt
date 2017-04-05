@@ -38,6 +38,7 @@ langDef = P.LanguageDef
         , ">="
         , "=="
         , "!="
+        , ";"
         ] ++
         binops ++
         (map (++"=") binops) -- +=, -= etc.
@@ -45,7 +46,7 @@ langDef = P.LanguageDef
     }
   where
     opChar :: Parser Char
-    opChar = P.oneOf "+-*/<>=|&"
+    opChar = P.oneOf "+-*/<>=|&;"
     binops = ["+", "-", "*", "/", "&", "|", "^", "<<", ">>"]
 
 lexer = P.makeTokenParser langDef
@@ -97,15 +98,19 @@ expr :: Parser Expr
 expr = P.buildExpressionParser opTable term
 
 term :: Parser Expr
-term = parens expr <|> (ExConst . ConstInt <$> natural)
+term = P.choice
+    [ parens expr
+    , ExConst . ConstInt <$> natural
     -- TODO: we should verify that 'natural' has the syntax we want for
     -- integers -- it accepts the haskell syntax.
+    , ExVar <$> identifier
+    ]
 
 typ :: Parser Type
 typ = P.choice
     [ TyArray <$> brackets expr <*> typ
     , reserved "struct" >>
-        TyStruct <$> (braces $ field `P.sepEndBy` reservedOp ",")
+        TyStruct <$> (braces $ field `P.sepEndBy` comma)
     , do
         varName <- TyVar <$> identifier
         args <- P.try $ P.optionMaybe $ angles $ typ `P.sepEndBy` comma
@@ -115,3 +120,15 @@ typ = P.choice
     ]
   where
    field = (,) <$> identifier <*> (reservedOp ":" >> typ)
+
+lval :: P.Parser LVal
+lval = do
+    -- I(zenhack) am unhappy with this.
+    tFn <- term
+    case tFn of
+        ExVar varName -> do
+            exArg <- P.optionMaybe (brackets expr)
+            return $ case exArg of
+                Nothing -> LVar varName
+                Just arg -> LIndex tFn arg
+        _ -> LIndex tFn <$> brackets expr

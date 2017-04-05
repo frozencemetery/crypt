@@ -40,21 +40,34 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , typ `parses` "myTyp" $ TyVar "myTyp"
     , typ `parses` "Foo<bar, baz>" $
         TyApp (TyVar "Foo") [TyVar "bar", TyVar "baz"]
+    , lval `parses` "foo" $ LVar "foo"
+    , lval `parses` "hello[3 + 2]" $
+         LIndex
+            (ExVar "hello")
+            (ExBinary Add
+                (ExConst (ConstInt 3))
+                (ExConst (ConstInt 2)))
+    , lval `parses` "(4 * 1)[32]" $
+        LIndex
+            (ExBinary Mul
+                (ExConst (ConstInt 4))
+                (ExConst (ConstInt 1)))
+            (ExConst (ConstInt 32))
     ]
   where
     parses p text result = TestCase $
         assertEqual
             ("should parse: " <> text)
-            (runParser p () "" text)
             (Right result)
+            (runParser p () "" text)
     fails p text = TestCase $
         assertEqual
             ("should fail: " <> text)
+            (Left ())
             (case runParser p () "" text of
                 -- If we get a left, normalize the argument
                 -- so we don't have to specify the exact error.
                 Left _ -> Left ()
                 Right ok -> Right ok)
-            (Left ())
 
 
