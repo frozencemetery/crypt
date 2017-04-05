@@ -38,7 +38,7 @@ data Stmt
     = StmtExpr Expr
     | StmtBlock [Stmt]
     | StmtAssign LVal Expr
-    | StmtAssignDecl Text Expr
+    | StmtAssignDecl LVal Expr
     deriving(Show, Eq)
 
 data Expr

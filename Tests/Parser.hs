@@ -53,6 +53,30 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
                 (ExConst (ConstInt 4))
                 (ExConst (ConstInt 1)))
             (ExConst (ConstInt 32))
+    , stmt `parses` "3 + 2;" $
+        StmtExpr $
+            ExBinary Add
+                (ExConst (ConstInt 3))
+                (ExConst (ConstInt 2))
+    , stmt `parses` "x := 23 + 3 * 21;" $
+        StmtAssignDecl
+            (LVar "x")
+            (ExBinary Add
+                (ExConst (ConstInt 23))
+                (ExBinary Mul
+                    (ExConst (ConstInt 3))
+                    (ExConst (ConstInt 21))))
+    , stmt `parses` "x = 32;" $
+        StmtAssign (LVar "x") (ExConst (ConstInt 32))
+    , stmt `parses` "{ 32; x = 1; }" $
+        StmtBlock
+            [ StmtExpr (ExConst (ConstInt 32))
+            , StmtAssign (LVar "x") (ExConst (ConstInt 1))
+            ]
+    , stmt `parses` "x[7] = 23;" $
+        StmtAssign
+            (LIndex (ExVar "x") (ExConst (ConstInt 7)))
+            (ExConst (ConstInt 23))
     ]
   where
     parses p text result = TestCase $

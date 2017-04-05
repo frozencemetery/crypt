@@ -60,6 +60,7 @@ natural = P.natural lexer
 parens = P.parens lexer
 reserved = P.reserved lexer
 reservedOp = P.reservedOp lexer
+semi = P.semi lexer
 
 
 
@@ -92,6 +93,18 @@ opTable =
     left txt ast = binary txt ast P.AssocLeft
     binary txt ast assoc =
         P.Infix (reservedOp txt >> (return $ ExBinary ast)) assoc
+
+
+stmt = P.choice
+    [ StmtBlock <$> braces (P.many stmt)
+    , P.try $ do
+        l <- lval
+        P.choice
+            [ reservedOp "=" >> StmtAssign l <$> expr
+            , reservedOp ":=" >> StmtAssignDecl l <$> expr
+            ] <* semi
+    , StmtExpr <$> expr <* semi
+    ]
 
 
 expr :: Parser Expr
