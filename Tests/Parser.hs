@@ -10,7 +10,6 @@ import Test.Framework.Providers.HUnit (hUnitTestToTests)
 import Test.HUnit                     (Test(TestCase, TestList), assertEqual)
 import Text.Parsec                    (runParser)
 
--- Tests. Should pull these out into a proper test suite soonish.
 tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     [ expr `parses` "4+1" $
         ExBinary Add (ExConst (ConstInt 4)) (ExConst (ConstInt 1))
