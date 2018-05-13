@@ -137,6 +137,7 @@ term = do
                 -- haskell syntax.
                 , ExVar <$> identifier
                 ]
+    -- TODO: support indexing expressions here.
     args <- P.optionMaybe $ parens (expr `P.sepEndBy` comma)
     return $ case args of
         Nothing    -> first

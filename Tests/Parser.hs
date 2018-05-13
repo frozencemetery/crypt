@@ -43,6 +43,12 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
         [ ExConst (ConstInt 2)
         , ExConst (ConstInt 3)
         ]
+    , expr `parses` "hello[2+4]" $
+        ExIndex
+            (ExVar "hello")
+            (ExBinary Add
+                (ExConst (ConstInt 2))
+                (ExConst (ConstInt 4)))
     , typ `parses` "[32]arr" $ TyArray (ExConst (ConstInt 32)) (TyVar "arr")
     , typ `parses` "struct {}" $ TyStruct []
     , typ `parses` "struct { foo: bar }" $ TyStruct [("foo", TyVar "bar")]
