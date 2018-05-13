@@ -4,11 +4,11 @@ module Tests.Parser where
 import Crypt.Ast
 import Crypt.Parser
 
-import Data.Monoid ((<>))
+import Data.Monoid                    ((<>))
+import Test.Framework                 (testGroup)
 import Test.Framework.Providers.HUnit (hUnitTestToTests)
-import Test.Framework (testGroup)
-import Test.HUnit (assertEqual, Test(TestCase, TestList))
-import Text.Parsec (runParser)
+import Test.HUnit                     (Test(TestCase, TestList), assertEqual)
+import Text.Parsec                    (runParser)
 
 -- Tests. Should pull these out into a proper test suite soonish.
 tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
@@ -158,7 +158,7 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
             (case runParser p () "" text of
                 -- If we get a left, normalize the argument
                 -- so we don't have to specify the exact error.
-                Left _ -> Left ()
+                Left _   -> Left ()
                 Right ok -> Right ok)
 
 
