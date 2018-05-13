@@ -54,6 +54,7 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , typ `parses` "Foo<bar, baz>" $
         TyApp (TyVar "Foo") [TyArgType $ TyVar "bar", TyArgType $ TyVar "baz"]
     , typ `parses` "u<32>" $ TyApp (TyVar "u") [TyArgNum 32]
+    , lval `parses` "W[t]" $ LIndex (ExVar "W") (ExVar "t")
     , lval `parses` "foo" $ LVar "foo"
     , lval `parses` "hello[3 + 2]" $
          LIndex
@@ -94,6 +95,11 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , stmt `parses` "for x := 0..32 { }" $
         StmtFor (LVar "x") (ExConst (ConstInt 0)) (ExConst (ConstInt 32))
             (StmtBlock [])
+    , stmt `parses` "for x := 3..7 {\n\tx[i] = 4;\n\t}\n" $
+        StmtFor (LVar "x") (ExConst (ConstInt 3)) (ExConst (ConstInt 7))
+            (StmtBlock
+                [ StmtAssign (LIndex (ExVar "x") (ExVar "i")) (ExConst (ConstInt 4))
+                ])
     , constDef `parses` "const Foo: Bar<T> = 32" $
         ( "Foo"
         , DefConst
