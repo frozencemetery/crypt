@@ -1,12 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Crypt.Parser where
 
-import qualified Data.Text as T
-import Control.Applicative ((<|>))
-import qualified Text.Parsec.Expr as P
-import qualified Text.Parsec.Token as P
+import           Control.Applicative           (empty, (<|>))
+import qualified Data.Text                     as T
+import qualified Text.Parsec.Expr              as P
+import qualified Text.Parsec.Token             as P
+import           Text.ParserCombinators.Parsec (Parser)
 import qualified Text.ParserCombinators.Parsec as P
-import Text.ParserCombinators.Parsec (Parser)
 
 import Crypt.Ast
 
@@ -137,7 +137,7 @@ term = do
                 ]
     args <- P.optionMaybe $ parens (expr `P.sepEndBy` comma)
     return $ case args of
-        Nothing -> first
+        Nothing    -> first
         Just args' -> ExApply first args'
 
 typ :: Parser Type
@@ -150,7 +150,7 @@ typ = P.choice
         args <- P.try $ P.optionMaybe $ angles $ typArg `P.sepEndBy` comma
         return $ case args of
             Just args' -> TyApp varName args'
-            Nothing -> varName
+            Nothing    -> varName
     ]
   where
    field = (,) <$> identifier <*> (colon >> typ)
