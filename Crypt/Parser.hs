@@ -75,7 +75,7 @@ whiteSpace = P.whiteSpace lexer
 opTable =
     [ [ left "*" Mul
       , left "/" Div
-      , left "%" Div
+      , left "%" Mod
       , left "<<" ShiftL
       , left ">>" ShiftR
       , left "&" BitAnd

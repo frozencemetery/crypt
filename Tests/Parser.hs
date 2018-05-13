@@ -26,6 +26,10 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
                     (ExConst (ConstInt 7))
                     (ExConst (ConstInt 4))))
             (ExConst (ConstInt 3))
+    , expr `parses` "4 % 2" $
+        ExBinary Mod
+            (ExConst (ConstInt 4))
+            (ExConst (ConstInt 2))
     , expr `parses` "1 & 2 == 3" $
         ExBinary Equals
             (ExBinary BitAnd (ExConst (ConstInt 1)) (ExConst (ConstInt 2)))
