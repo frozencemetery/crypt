@@ -32,6 +32,10 @@ executable crypt
 test-suite the-test-suite
   type: exitcode-stdio-1.0
   main-is: TestMain.hs
+  other-modules:
+      Tests.Parser
+    , Crypt.Ast
+    , Crypt.Parser
   build-depends:
     base >=4.9 && <4.12,
     parsec >=3.1.11 && <3.2,
