@@ -32,6 +32,7 @@ langDef = P.LanguageDef
     , P.reservedOpNames =
         [ ":"
         , "->"
+        , "="
         , ":=" -- not a binop, so not covered below.
         , ".."
         , ","
