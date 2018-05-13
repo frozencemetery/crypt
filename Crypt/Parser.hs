@@ -5,7 +5,7 @@ import           Control.Applicative           (empty, (<|>))
 import qualified Data.Text                     as T
 import qualified Text.Parsec.Expr              as P
 import qualified Text.Parsec.Token             as P
-import           Text.ParserCombinators.Parsec (Parser)
+import           Text.ParserCombinators.Parsec (Parser, (<?>))
 import qualified Text.ParserCombinators.Parsec as P
 
 import Crypt.Ast
@@ -119,10 +119,11 @@ stmt = P.choice
         body <- stmt
         return (StmtFor l lo hi body)
     ]
+    <?> "statement"
 
 
 expr :: Parser Expr
-expr = P.buildExpressionParser opTable term
+expr = (P.buildExpressionParser opTable term) <?> "expression"
 
 term :: Parser Expr
 term = do
@@ -151,7 +152,7 @@ typ = P.choice
         return $ case args of
             Just args' -> TyApp varName args'
             Nothing    -> varName
-    ]
+    ] <?> "type"
   where
    field = (,) <$> identifier <*> (colon >> typ)
    typArg = P.choice
@@ -160,35 +161,35 @@ typ = P.choice
         ]
 
 lval :: P.Parser LVal
-lval = do
+lval = (do
     -- I(zenhack) am unhappy with this.
     tFn <- term
     case tFn of
         ExVar varName -> do
             exArg <- P.optionMaybe (brackets expr)
             return $ case exArg of
-                Nothing -> LVar varName
+                Nothing  -> LVar varName
                 Just arg -> LIndex tFn arg
-        _ -> LIndex tFn <$> brackets expr
+        _ -> LIndex tFn <$> brackets expr) <?> "lvalue"
 
 
 file = whiteSpace >> P.many definition <* P.eof
 
-definition = P.choice [typeDef, fnDef, constDef]
+definition = P.choice [typeDef, fnDef, constDef] <?> "definition"
 
 typeDef :: P.Parser (T.Text, Def)
-typeDef = do
+typeDef = (do
     reserved "type"
     name <- identifier
     reservedOp "="
     ty <- typ
-    return (name, DefType ty)
+    return (name, DefType ty)) <?> "type definition"
 
 fnDef :: P.Parser (T.Text, Def)
-fnDef = do
+fnDef = (do
     reserved "fn"
     name <- identifier
-    args <- parens (argSpecs `P.sepBy` comma)
+    args <- parens (argSpecs `P.sepBy` comma) <?> "argument list"
     returnType <- P.optionMaybe $ do
         reservedOp "->"
         typ
@@ -197,7 +198,7 @@ fnDef = do
     return (name, DefFn $ Fn { fnArgs = concat args
                              , fnReturn = returnType
                              , fnBody = body
-                             })
+                             })) <?> "function definition"
   where
     argSpecs = do
         argNames <- identifier `P.sepBy` comma
@@ -211,11 +212,11 @@ fnDef = do
                      argNames
 
 constDef :: P.Parser (T.Text, Def)
-constDef = do
+constDef = (do
     reserved "const"
     name <- identifier
     colon
     ty <- typ
     reservedOp "="
     value <- expr
-    return (name, DefConst ty value)
+    return (name, DefConst ty value)) <?> "constant declaration"
