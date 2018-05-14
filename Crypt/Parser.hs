@@ -35,6 +35,7 @@ langDef = P.LanguageDef
         , "->"
         , "="
         , ":=" -- not a binop, so not covered below.
+        , "."
         , ".."
         , ","
         , "<"
@@ -107,7 +108,7 @@ stmt = P.choice
     , P.try $ do
         l <- lval
         P.choice
-            [ reservedOp "=" >> StmtAssign l <$> expr
+            [ assignOper >>= \op -> StmtAssign l op <$> expr
             , reservedOp ":=" >> StmtAssignDecl l <$> expr
             ] <* semi
     , StmtExpr <$> expr <* semi
@@ -123,6 +124,19 @@ stmt = P.choice
     ]
     <?> "statement"
 
+assignOper :: Parser (Maybe BinOp)
+assignOper = P.choice
+    [ reservedOp "+=" >> return (Just Add)
+    , reservedOp "-=" >> return (Just Sub)
+    , reservedOp "*=" >> return (Just Mul)
+    , reservedOp "/=" >> return (Just Div)
+    , reservedOp "&=" >> return (Just BitAnd)
+    , reservedOp "|=" >> return (Just BitOr)
+    , reservedOp "^=" >> return (Just BitXor)
+    , reservedOp "<<=" >> return (Just ShiftL)
+    , reservedOp ">>=" >> return (Just ShiftR)
+    , reservedOp "=" >> return Nothing
+    ]
 
 expr :: Parser Expr
 expr = (P.buildExpressionParser opTable term) <?> "expression"
@@ -141,13 +155,17 @@ term = do
     foldl (&) first <$> P.many tail
   where
     tail :: Parser (Expr -> Expr)
-    tail = arglist <|> indexexpr
+    tail = arglist <|> indexexpr <|> getfield
     arglist = do
         args <- parens (expr `P.sepEndBy` comma)
         return $ \f -> ExApply f args
     indexexpr = do
         idx <- brackets expr
         return $ \val -> ExIndex val idx
+    getfield = P.try $ do
+        reservedOp "."
+        name <- identifier
+        return $ \val -> ExGet val name
 
 typ :: Parser Type
 typ = P.choice

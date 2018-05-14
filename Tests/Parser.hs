@@ -49,6 +49,7 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
             (ExBinary Add
                 (ExConst (ConstInt 2))
                 (ExConst (ConstInt 4)))
+    , expr `parses` "foo.bar" $ ExGet (ExVar "foo") "bar"
     , typ `parses` "[32]arr" $ TyArray (ExConst (ConstInt 32)) (TyVar "arr")
     , typ `parses` "struct {}" $ TyStruct []
     , typ `parses` "struct { foo: bar }" $ TyStruct [("foo", TyVar "bar")]
@@ -74,6 +75,8 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
                 (ExConst (ConstInt 4))
                 (ExConst (ConstInt 1)))
             (ExConst (ConstInt 32))
+    , lval `parses` "foo.bar[7]" $
+        LIndex (ExGet (ExVar "foo") "bar") (ExConst (ConstInt 7))
     , stmt `parses` "3 + 2;" $
         StmtExpr $
             ExBinary Add
@@ -88,15 +91,16 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
                     (ExConst (ConstInt 3))
                     (ExConst (ConstInt 21))))
     , stmt `parses` "x = 32;" $
-        StmtAssign (LVar "x") (ExConst (ConstInt 32))
+        StmtAssign (LVar "x") Nothing (ExConst (ConstInt 32))
     , stmt `parses` "{ 32; x = 1; }" $
         StmtBlock
             [ StmtExpr (ExConst (ConstInt 32))
-            , StmtAssign (LVar "x") (ExConst (ConstInt 1))
+            , StmtAssign (LVar "x") Nothing (ExConst (ConstInt 1))
             ]
     , stmt `parses` "x[7] = 23;" $
         StmtAssign
             (LIndex (ExVar "x") (ExConst (ConstInt 7)))
+            Nothing
             (ExConst (ConstInt 23))
     , stmt `parses` "for x := 0..32 { }" $
         StmtFor (LVar "x") (ExConst (ConstInt 0)) (ExConst (ConstInt 32))
@@ -104,8 +108,10 @@ tests = testGroup "Parser Tests" $ hUnitTestToTests $ TestList
     , stmt `parses` "for x := 3..7 {\n\tx[i] = 4;\n\t}\n" $
         StmtFor (LVar "x") (ExConst (ConstInt 3)) (ExConst (ConstInt 7))
             (StmtBlock
-                [ StmtAssign (LIndex (ExVar "x") (ExVar "i")) (ExConst (ConstInt 4))
+                [ StmtAssign (LIndex (ExVar "x") (ExVar "i")) Nothing (ExConst (ConstInt 4))
                 ])
+    , stmt `parses` "x += 4;" $
+        StmtAssign (LVar "x") (Just Add) (ExConst (ConstInt 4))
     , constDef `parses` "const Foo: Bar<T> = 32" $
         ( "Foo"
         , DefConst

@@ -40,7 +40,7 @@ data Fn = Fn
 data Stmt
     = StmtExpr Expr
     | StmtBlock [Stmt]
-    | StmtAssign LVal Expr
+    | StmtAssign LVal (Maybe BinOp) Expr
     | StmtAssignDecl LVal Expr
     | StmtFor LVal Expr Expr Stmt
     deriving(Show, Eq)
