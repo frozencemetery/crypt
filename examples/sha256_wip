@@ -5,9 +5,9 @@
 */
 
 
-type HashVal = [8]u<32>
+type HashVal = [8]secret u<32>
 
-type Block = [512/32]u<32>
+type Block = [512/32]secret u<32>
 
 type State = struct {
 	hashval: HashVal,

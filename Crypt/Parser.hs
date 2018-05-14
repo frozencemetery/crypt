@@ -25,6 +25,8 @@ langDef = P.LanguageDef
     , P.reservedNames =
         [ "fn"
         , "const"
+        , "public"
+        , "secret"
         , "struct"
         , "type"
         , "mut"
@@ -178,6 +180,7 @@ typ = P.choice
         return $ case args of
             Just args' -> TyApp varName args'
             Nothing    -> varName
+    , secrecy <*> typ
     ] <?> "type"
   where
    field = (,) <$> identifier <*> (colon >> typ)
@@ -185,6 +188,9 @@ typ = P.choice
         [ TyArgNum <$> natural
         , TyArgType <$> typ
         ]
+   secrecy =
+        (reserved "secret" *> pure TySecret)
+        <|> (reserved "public" *> pure TyPublic)
 
 lval :: P.Parser LVal
 lval = (do

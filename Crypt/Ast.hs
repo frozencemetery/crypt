@@ -23,6 +23,8 @@ data Type
     | TyArray Expr Type -- Expr must be a constant integral value.
     | TyStruct [(Text, Type)]
     | TyApp Type [TypeArg]
+    | TyPublic Type
+    | TySecret Type
     deriving(Show, Eq)
 
 data TypeArg
