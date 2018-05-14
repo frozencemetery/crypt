@@ -2,6 +2,7 @@
 module Crypt.Parser where
 
 import           Control.Applicative           (empty, (<|>))
+import           Data.Function                 ((&))
 import qualified Data.Text                     as T
 import qualified Text.Parsec.Expr              as P
 import qualified Text.Parsec.Token             as P
@@ -137,11 +138,16 @@ term = do
                 -- haskell syntax.
                 , ExVar <$> identifier
                 ]
-    -- TODO: support indexing expressions here.
-    args <- P.optionMaybe $ parens (expr `P.sepEndBy` comma)
-    return $ case args of
-        Nothing    -> first
-        Just args' -> ExApply first args'
+    foldl (&) first <$> P.many tail
+  where
+    tail :: Parser (Expr -> Expr)
+    tail = arglist <|> indexexpr
+    arglist = do
+        args <- parens (expr `P.sepEndBy` comma)
+        return $ \f -> ExApply f args
+    indexexpr = do
+        idx <- brackets expr
+        return $ \val -> ExIndex val idx
 
 typ :: Parser Type
 typ = P.choice
@@ -164,15 +170,11 @@ typ = P.choice
 
 lval :: P.Parser LVal
 lval = (do
-    -- I(zenhack) am unhappy with this.
     tFn <- term
     case tFn of
-        ExVar varName -> do
-            exArg <- P.optionMaybe (brackets expr)
-            return $ case exArg of
-                Nothing  -> LVar varName
-                Just arg -> LIndex tFn arg
-        _ -> LIndex tFn <$> brackets expr) <?> "lvalue"
+        ExVar varName   -> return (LVar varName)
+        ExIndex arr idx -> return (LIndex arr idx)
+        _               -> empty) <?> "lvalue"
 
 
 file = whiteSpace >> P.many definition <* P.eof
